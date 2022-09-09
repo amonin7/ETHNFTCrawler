@@ -1,6 +1,10 @@
 from web3 import Web3, HTTPProvider
 import requests
 
+CRYPTO_KITTIES_SC = '0x06012c8cf97BEaD5deAe237070F9587f8E7A266d'
+
+CRYPTO_PUNKS_SC = '0xb47e3cd837dDF8e4c57F05d70Ab865de6e193BBB'
+
 
 class CollectionCreationCrawler:
 
@@ -34,21 +38,22 @@ class CollectionCreationCrawler:
 
     def run(self, from_block: int) -> None:
         latest = self.get_latest_block_number()
-        for i in range(from_block, latest + 1, 100):
+        for i in range(from_block, latest + 1, 200):
             latest_block_number = 0
             cur_block_number = 0
             cur_contracts_list = []
-            logs = self.get_logs(i, i + 99)
+            logs = self.get_logs(i, i + 199)
             for log in logs:
                 cur_block_number = log['blockNumber']
                 if cur_block_number != latest_block_number:
                     if len(cur_contracts_list) != 0:
-                        print(f'{cur_block_number}: {cur_contracts_list}')
+                        print(f'{latest_block_number}: {cur_contracts_list}')
                     cur_contracts_list = []
                     latest_block_number = cur_block_number
                 contract = log['address']
                 contract_type = self.get_contract_type(contract)
-                if contract_type == 'ERC721' or contract_type == 'ERC1155':
+                if contract_type == 'ERC721' or contract_type == 'ERC1155'\
+                        or contract == CRYPTO_PUNKS_SC or contract == CRYPTO_KITTIES_SC:
                     cur_contracts_list.append(contract)
             if len(cur_contracts_list) != 0:
                 print(f'{cur_block_number}: {cur_contracts_list}')

@@ -3,5 +3,4 @@ services:
   crawler:
     build: .
     environment:
-      DATABASE_URL: postgres://todoapp@postgres/todos
       PYTHONUNBUFFERED: 1
