@@ -85,18 +85,49 @@ class CollectionCreationCrawler:
         return int(self.web3.eth.get_block_number())
 
     def get_contract_type(self, contract: str) -> str:
+        """Provides the type of the smart contract passed as an argument
+
+        Parameters
+        ----------
+        contract: str
+            The address of the smart contract we want to know information about
+
+        Returns
+        -------
+        str
+            type of the smart contract (meaning the token Standard)
+        """
         get_metadata_url = f'{self.base_url}/getContractMetadata?contractAddress={contract}'
         headers = {"Accept": "application/json"}
         r = requests.get(get_metadata_url, headers=headers)
         return r.json()['contractMetadata']['tokenType']
 
     def run(self, from_block: int) -> None:
+        """
+        Executes all logic of the class. Saying that it executes the algorithm:
+
+        1. Fetch the latest block number, until which we would look for collection creation events
+
+        2. Get the range of the blocks, by which we will iterate (cause we could not fetch logs from all
+        blocks in one time, because there is a limit of api response for 10.000 logs per response)
+
+        3. Get ETH logs with the current block range from Alchemy API.
+        **Note:** the logs are already filtered by "OwnershipTransfer" event types, coming from 0x000... address
+
+        4. Filter received logs by the contract standard. And all, which has compatible types are printed in the stdout
+
+        Parameters
+        ----------
+        from_block : int
+            The number of the block to start listening logs from
+        """
         latest = self.get_latest_block_number()
-        for i in range(from_block, latest + 1, 200):
+        block_range = 200
+        for i in range(from_block, latest + 1, block_range):
             latest_block_number = 0
             cur_block_number = 0
             cur_contracts_list = []
-            logs = self.get_logs(i, i + 199)
+            logs = self.get_logs(i, i + block_range - 1)
             for log in logs:
                 cur_block_number = log['blockNumber']
                 if cur_block_number != latest_block_number:
